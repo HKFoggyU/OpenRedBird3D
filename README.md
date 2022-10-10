@@ -13,4 +13,5 @@ Check and modify `` redBird_OpenSCAD.py `` to customize this 3D model. You may n
 ## Preview
 
 The colors are just to make parts distinguishable.
+
 ![preview](redBird_OpenSCAD.png)
