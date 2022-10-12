@@ -1,6 +1,6 @@
 # OpenRedBird3D
 
-3D model for HKUST Redbird (Sundial), build with [OpenSCAD](https://openscad.org/).
+3D model for HKUST Redbird (Sundial), built with [OpenSCAD](https://openscad.org/).
 
 ## Usage
 
