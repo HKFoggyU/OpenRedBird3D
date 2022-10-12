@@ -7,7 +7,7 @@ from solid.utils import *
 
 mm = 1
 bodyWidth = 100*mm
-bodyThickness = 2*mm
+bodyThickness = bodyWidth*0.04
 baseRadiusBottom = bodyWidth*0.5
 baseRadiusTop = baseRadiusBottom/2
 baseHeight = bodyWidth/20
