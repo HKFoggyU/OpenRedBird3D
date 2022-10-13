@@ -5,320 +5,46 @@ from solid import *
 from solid.utils import *
 
 
+def genRedBirdBodyPoints(targetHeight):
+    points = np.genfromtxt("redBird_body_points.csv", delimiter=",")
+    groundPointIndex = np.where(points == np.min(points[:, 1]))[0][0]
+    groundPointXDistance = points[groundPointIndex][0]
+    Xmax = max(points[:, 0])
+    Xmin = min(points[:, 0])
+    Ymax = max(points[:, 1])
+    Ymin = min(points[:, 1])
+    width = Xmax - Xmin
+    height = Ymax - Ymin
+    scaleFactor = targetHeight / height
+    pointsNormalized = (points - np.array([groundPointXDistance, Ymin])) * scaleFactor
+    return pointsNormalized, height/width
+
+
+####################### Prepare geomoetry #######################
 mm = 1
-bodyWidth = 100*mm
-bodyThickness = bodyWidth*0.04
-baseRadiusBottom = bodyWidth*0.5
-baseRadiusTop = baseRadiusBottom/2
-baseHeight = bodyWidth/20
-dInterference = bodyWidth/50
+deg = 1
 
-def returnPoints():
-    """
-    Extracted from PAO & 30 Anniversary resources
-    """
-    return np.array([
-        (42.1459,15.3345),\
-        (43.1557,15.4911),\
-        (44.1655,15.6477),\
-        (45.1403,15.8509),\
-        (46.0855,16.0935),\
-        (47.0253,16.3422),\
-        (47.9058,16.6575),\
-        (48.7863,16.9729),\
-        (49.6263,17.3255),\
-        (50.4420,17.7003),\
-        (51.2469,18.0829),\
-        (51.9978,18.5040),\
-        (52.7487,18.9251),\
-        (53.4536,19.3696),\
-        (54.1396,19.8237),\
-        (54.9487,20.4031),\
-        (56.1257,21.3571),\
-        (57.3027,22.3111),\
-        (58.2732,23.2434),\
-        (59.1897,24.1701),\
-        (60.0189,25.0522),\
-        (60.6742,25.8455),\
-        (61.3296,26.6388),\
-        (61.8707,27.4047),\
-        (62.3957,28.1667),\
-        (62.7072,27.8704),\
-        (62.7212,26.1001),\
-        (62.7352,24.3298),\
-        (62.5436,22.7360),\
-        (62.3434,21.1497),\
-        (62.0475,19.6508),\
-        (61.6566,18.2388),\
-        (61.2584,16.8339),\
-        (60.7004,15.5867),\
-        (60.1424,14.3394),\
-        (59.5004,13.1829),\
-        (58.7989,12.0907),\
-        (58.0821,11.0170),\
-        (57.2606,10.0703),\
-        (56.4392,9.1236),\
-        (55.5532,8.2677),\
-        (54.6354,7.4569),\
-        (53.7022,6.6726),\
-        (52.7116,5.9879),\
-        (51.7209,5.3033),\
-        (50.6933,4.7064),\
-        (49.6534,4.1384),\
-        (48.6060,3.6018),\
-        (47.5405,3.1407),\
-        (46.4750,2.6796),\
-        (45.4078,2.2999),\
-        (44.3402,1.9362),\
-        (43.2808,1.6056),\
-        (42.2348,1.3296),\
-        (41.1887,1.0536),\
-        (39.3271,0.7304),\
-        (37.3939,0.4030),\
-        (35.6308,0.1842),\
-        (34.0666,0.0922),\
-        (32.5024,0.0007),\
-        (30.9304,0.1116),\
-        (29.3583,0.2225),\
-        (28.1289,0.3558),\
-        (27.1857,0.5079),\
-        (26.2362,0.6667),\
-        (25.2187,0.8953),\
-        (24.2013,1.1239),\
-        (23.1515,1.4063),\
-        (22.0826,1.7204),\
-        (21.0088,2.0506),\
-        (19.9113,2.4593),\
-        (18.8138,2.8680),\
-        (17.7122,3.3505),\
-        (16.6089,3.8627),\
-        (15.5099,4.4036),\
-        (14.4237,5.0284),\
-        (13.3375,5.6533),\
-        (12.2830,6.3749),\
-        (11.2367,7.1215),\
-        (10.2116,7.9120),\
-        (9.2280,8.7892),\
-        (8.2445,9.6663),\
-        (7.3361,10.6663),\
-        (6.4382,11.6831),\
-        (5.5859,12.7626),\
-        (4.7963,13.9281),\
-        (4.0068,15.0937),\
-        (3.3437,16.4111),\
-        (2.6854,17.7344),\
-        (2.1049,19.1418),\
-        (1.6008,20.6319),\
-        (1.1049,22.1301),\
-        (0.7777,23.7959),\
-        (0.4506,25.4618),\
-        (0.2409,27.2363),\
-        (0.1136,29.0870),\
-        (0.0068,30.8776),\
-        (0.0377,32.2654),\
-        (0.0685,33.6532),\
-        (0.1556,34.9479),\
-        (0.2702,36.1971),\
-        (0.4003,37.4211),\
-        (0.5878,38.5525),\
-        (0.7753,39.6840),\
-        (1.0099,40.7423),\
-        (1.2597,41.7769),\
-        (1.5248,42.7889),\
-        (1.8261,43.7476),\
-        (2.1274,44.7063),\
-        (2.4630,45.6188),\
-        (2.8052,46.5225),\
-        (3.3079,47.7390),\
-        (4.0720,49.4649),\
-        (4.8361,51.1908),\
-        (5.6323,52.9450),\
-        (6.4313,54.7017),\
-        (7.2067,56.5502),\
-        (7.9549,58.5049),\
-        (8.7007,60.4545),\
-        (9.0290,61.5583),\
-        (9.3573,62.6622),\
-        (9.6611,63.8275),\
-        (9.9446,65.0435),\
-        (10.2232,66.2715),\
-        (10.4512,67.6206),\
-        (10.6792,68.9698),\
-        (10.8653,70.4162),\
-        (11.0271,71.9193),\
-        (11.1732,73.4501),\
-        (11.2440,75.1127),\
-        (11.3149,76.7754),\
-        (11.3036,78.3596),\
-        (11.2594,79.9126),\
-        (11.1897,81.4376),\
-        (11.0458,82.8813),\
-        (10.9018,84.3250),\
-        (10.6904,85.6818),\
-        (10.4620,87.0165),\
-        (10.2099,88.3143),\
-        (9.9122,89.5404),\
-        (9.6144,90.7665),\
-        (9.2690,91.8971),\
-        (8.9171,93.0149),\
-        (8.5489,94.0869),\
-        (8.1582,95.0967),\
-        (7.7676,96.1065),\
-        (7.3542,97.0123),\
-        (6.9399,97.9144),\
-        (6.3106,99.1110),\
-        (5.4724,100.5936),\
-        (4.6385,102.0551),\
-        (3.8888,103.1109),\
-        (3.1391,104.1666),\
-        (2.5138,104.9717),\
-        (1.9746,105.6032),\
-        (1.4795,106.1788),\
-        (1.2727,106.3887),\
-        (1.0658,106.5987),\
-        (1.2167,106.5451),\
-        (1.5402,106.3644),\
-        (1.9796,106.0997),\
-        (2.8391,105.5305),\
-        (3.6987,104.9613),\
-        (4.8385,104.0668),\
-        (6.0678,103.0684),\
-        (7.1387,102.1677),\
-        (7.8400,101.4948),\
-        (8.5413,100.8220),\
-        (9.2679,100.0460),\
-        (9.9993,99.2506),\
-        (10.7342,98.4063),\
-        (11.4749,97.4833),\
-        (12.2155,96.5603),\
-        (12.9455,95.5145),\
-        (13.6746,94.4588),\
-        (14.3886,93.3387),\
-        (15.0854,92.1452),\
-        (15.7817,90.9504),\
-        (16.4254,89.6141),\
-        (17.0691,88.2777),\
-        (17.6721,86.8598),\
-        (18.2419,85.3754),\
-        (18.8029,83.8769),\
-        (19.2780,82.2395),\
-        (19.7531,80.6021),\
-        (20.1549,78.8644),\
-        (20.5146,77.0689),\
-        (20.8502,75.2446),\
-        (21.0735,73.2859),\
-        (21.2969,71.3271),\
-        (21.3839,69.7402),\
-        (21.4174,68.2996),\
-        (21.4189,66.8553),\
-        (21.3290,65.4007),\
-        (21.2391,63.9461),\
-        (21.0715,62.4864),\
-        (20.8845,61.0254),\
-        (20.6731,59.5649),\
-        (20.4152,58.1053),\
-        (20.1573,56.6457),\
-        (19.5755,53.9250),\
-        (18.9515,51.0403),\
-        (18.3407,48.1970),\
-        (17.7473,45.4093),\
-        (17.1540,42.6216),\
-        (16.9225,41.2376),\
-        (16.7028,39.8993),\
-        (16.5271,38.5850),\
-        (16.3936,37.2938),\
-        (16.2660,36.0055),\
-        (16.2449,34.7692),\
-        (16.2239,33.5328),\
-        (16.2851,32.3336),\
-        (16.4027,31.1597),\
-        (16.5426,29.9954),\
-        (16.8250,28.8916),\
-        (17.1073,27.7879),\
-        (17.5191,26.7368),\
-        (17.9925,25.7108),\
-        (18.5135,24.7036),\
-        (19.2041,23.7630),\
-        (19.8946,22.8224),\
-        (20.3907,22.2659),\
-        (20.8256,21.8300),\
-        (21.2799,21.4015),\
-        (21.7790,20.9898),\
-        (22.2780,20.5782),\
-        (22.6344,20.3107),\
-        (22.9648,20.0704),\
-        (23.2960,19.8312),\
-        (23.6281,19.5938),\
-        (23.9618,19.3589),\
-        (24.2972,19.1271),\
-        (24.6348,18.8991),\
-        (24.9750,18.6755),\
-        (25.3181,18.4569),\
-        (25.6645,18.2440),\
-        (26.0146,18.0374),\
-        (26.3687,17.8378),\
-        (26.7273,17.6458),\
-        (27.0907,17.4620),\
-        (27.4592,17.2872),\
-        (27.8330,17.1215),\
-        (28.2117,16.9650),\
-        (28.5946,16.8172),\
-        (28.9814,16.6780),\
-        (29.3715,16.5470),\
-        (29.7645,16.4241),\
-        (30.1598,16.3090),\
-        (30.5569,16.2014),\
-        (30.9553,16.1010),\
-        (31.3545,16.0077),\
-        (31.7541,15.9211),\
-        (32.1535,15.8410),\
-        (32.5522,15.7671),\
-        (32.9498,15.6992),\
-        (33.3459,15.6371),\
-        (33.7404,15.5805),\
-        (34.1335,15.5293),\
-        (34.5252,15.4832),\
-        (34.9154,15.4420),\
-        (35.3041,15.4056),\
-        (35.6915,15.3738),\
-        (36.0775,15.3462),\
-        (36.4621,15.3228),\
-        (36.8454,15.3034),\
-        (37.2273,15.2877),\
-        (37.6079,15.2755),\
-        (37.9872,15.2666),\
-        (38.3653,15.2609),\
-        (38.7421,15.2581),\
-        (39.1176,15.2581),\
-        (39.4919,15.2606),\
-        (39.8651,15.2654),\
-        (40.2370,15.2724),\
-        (40.6078,15.2812),\
-        (40.9774,15.2919),\
-        (41.3459,15.3040),\
-        (41.7113,15.3174),\
-        (42.0171,15.3293)
-        ])
+bodyHeight = 100*mm
+startAngle = 12.5*deg
+endAngle = startAngle + 27*deg
 
+## Load points data & scale into `targetHeight` & move to the origin
+pointsScaled, aspectRatio = genRedBirdBodyPoints(bodyHeight)
 
-points = returnPoints()
-Xmax = max(points[:, 0])
-Xmin = min(points[:, 0])
-scaleFactor = bodyWidth / (Xmax - Xmin)
-## Scale to 100 mm in width
-pointsScaled = (points-np.array([[Xmin, 0]]))*scaleFactor
-Ymin_X = np.where(pointsScaled == np.min(pointsScaled[:, 1]))
-xDistanceToZero = pointsScaled[Ymin_X[0][0]][0]
-Ymax = max(points[:, 1])
-Ymin = min(points[:, 1])
-# np.savetxt("points.csv", pointsScaled, fmt="%.5f", delimiter=",")
+## Generate derivative parameters
+bodyWidth = bodyHeight/aspectRatio
+bodyThickness = bodyHeight/50
+baseRadiusBottom = bodyWidth/2.5
+baseRadiusTop = baseRadiusBottom/3
+baseHeight = bodyThickness*1.1
+dInterference = bodyHeight/100
 
 ##################### Generate OpenSCAD code #####################
 ## Generate redbird: body part
 redbirdBody = polygon(pointsScaled)
 redbirdBody = linear_extrude(bodyThickness)(redbirdBody)
 redbirdBody = rotate(a=90, v=[1, 0, 0])(redbirdBody)
-redbirdBody = translate([-xDistanceToZero, 0, 0])(redbirdBody)
+redbirdBody = translate([0, bodyThickness/2, 0])(redbirdBody)
 
 ## Generate redbird: wing part
 wingSphereOuter = sphere(r=bodyWidth*0.52)
@@ -329,24 +55,24 @@ wingSphereInner = scale([1, 1.458, 1])(wingSphereInner)
 
 xsecSurfaceLower = cube([bodyWidth*4, bodyWidth*4, bodyWidth])
 xsecSurfaceLower = translate([-bodyWidth*2, -bodyWidth*2, 0])(xsecSurfaceLower)
-xsecSurfaceLower = rotate(a = 90+12.5, v=[0, 1, 0])(xsecSurfaceLower)
+xsecSurfaceLower = rotate(a = 90+startAngle, v=[0, 1, 0])(xsecSurfaceLower)
 xsecSurfaceLower = translate([bodyWidth*0.07, 0, bodyWidth*0.58])(xsecSurfaceLower)
 xsecSurfaceUpper = cube([bodyWidth*4, bodyWidth*4, bodyWidth])
 xsecSurfaceUpper = translate([-bodyWidth*2, -bodyWidth*2, 0])(xsecSurfaceUpper)
-xsecSurfaceUpper = rotate(a = 270+31.5, v=[0, 1, 0])(xsecSurfaceUpper)
+xsecSurfaceUpper = rotate(a = 270+endAngle, v=[0, 1, 0])(xsecSurfaceUpper)
 xsecSurfaceUpper = translate([bodyWidth*0.07, 0, bodyWidth*0.58])(xsecSurfaceUpper)
 
 redbirdWing = wingSphereOuter - wingSphereInner - xsecSurfaceUpper - xsecSurfaceLower
 
 ## Generate redbird: merge into a whole redbird
-redbird = color("red")(translate([0, 0, -dInterference])(redbirdBody + redbirdWing))
+redbird = color("red")(redbirdBody + redbirdWing)
 
 ## Generate supporting cylinders
-baseTop = translate([0, 0, -baseHeight/2])(cylinder(r=baseRadiusTop, h=baseHeight, center=True))
+baseTop = translate([0, 0, -baseHeight/2])(cylinder(r=baseRadiusTop, h=baseHeight+dInterference, center=True))
 baseBottom = translate([0, 0, dInterference-baseHeight*3/2])(cylinder(r=baseRadiusBottom, h=baseHeight, center=True))
-base = color("Ivory")(baseBottom+baseTop)
+base = color("Ivory")(baseBottom + baseTop)
 
-obj = redbird + base
-scad_render_to_file(obj, "redBird_OpenSCAD.scad", file_header = '$fn= $preview ? 120 : 360;')
+output = redbird + base
+scad_render_to_file(output, "redBird_OpenSCAD.scad", file_header = '$fn= $preview ? 120 : 360;')
 
 ############ Please use OpenSCAD to generate 3D model ############
